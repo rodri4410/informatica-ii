@@ -22,6 +22,7 @@ Usuarios de GitHub de los participantes de Informática II.
 - tcatinello
 - DaianaMedoneAcosta
 - VZ326
+- ARodriguez067
 - bcrrica
 - lucascerbino-sudo
 - Lucianodguerra
@@ -31,4 +32,4 @@ Usuarios de GitHub de los participantes de Informática II.
 - LautaroCasco
 - MariselHumana
 - nahuel1986
-
+- Lautaa-ctrl
