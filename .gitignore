@@ -1,4 +1,18 @@
-# Archivos compilados
+# ──────────────────────────────────────────────────────────────────
+# Regla base: ignorar TODO archivo sin extensión, pero dejar entrar a
+# los directorios y a cualquier archivo CON extensión.
+#
+# IMPORTANTE: este bloque va PRIMERO. En gitignore gana la última regla
+# que matchea, así que los ignores específicos de abajo (que tienen
+# extensión) tienen que venir DESPUÉS de "!*.*" para que no los re-incluya.
+# ──────────────────────────────────────────────────────────────────
+*
+!*/
+!*.*
+
+# ── A partir de acá, lo que tiene extensión pero NUNCA se commitea ──
+
+# Compilados / objetos
 *.o
 *.obj
 *.exe
@@ -8,25 +22,16 @@
 build/
 cmake-build-*/
 
-# IDEs
+# Editores / IDEs
 .idea/
 *.swp
 *.swo
+.vscode/
+**/.vscode/
 
 # OS
 Thumbs.db
 .DS_Store
 
-# ignorar cualquier ejecutable en todo el repo
-*
-!*/
-!*.*
-
 # Archivos marcados explícitamente para no subir
 *_NOSUBIR.*
-
-# .vscode al final: la regla "!*/" de arriba re-incluye todos los
-# directorios, así que la exclusión de .vscode tiene que venir después
-# para que tenga la última palabra.
-.vscode/
-**/.vscode/
