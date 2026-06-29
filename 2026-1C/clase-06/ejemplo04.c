@@ -23,11 +23,12 @@ int main() {
 
 int buscarProd(const char *nom, int codBuscado, Producto *resultado) {
     FILE *fp = fopen(nom, "rb");
+    Producto temp;
+
     if (!fp) {
         perror("Error al abrir el archivo");
         return 0;
     }
-    Producto temp;
     while (fread(&temp, sizeof(Producto), 1, fp) == 1) {
         if (temp.codigo == codBuscado) {
             *resultado = temp;

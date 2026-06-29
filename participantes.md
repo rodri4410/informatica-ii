@@ -34,3 +34,4 @@ Usuarios de GitHub de los participantes de Informática II.
 - nahuel1986
 - Lautaa-ctrl
 - estebanlukja
+- lmsotelo

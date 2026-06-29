@@ -11,19 +11,20 @@ int main() {
 
 int xcopiar_archivo(const char *origen, const char *destino) {
     FILE *fin  = fopen(origen, "rb");
+    FILE *fout;
+    unsigned char buffer[4096];
+    size_t bytesLeidos, bytesEscritos;
+
     if (!fin) {
         perror("Error abriendo archivo origen");
         return 0;
     }
-    FILE *fout = fopen(destino, "wb");
+    fout = fopen(destino, "wb");
     if (!fout) {
         perror("Error abriendo archivo destino");
         fclose(fin);
         return 0;
     }
-
-    unsigned char buffer[4096];
-    size_t bytesLeidos, bytesEscritos;
 
     while ((bytesLeidos = fread(buffer, 1, sizeof(buffer), fin)) > 0) {
         // Modificar buffer: reemplazar ',' por ';'

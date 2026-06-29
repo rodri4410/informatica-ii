@@ -3,6 +3,8 @@
 int main() {
     // Abrimos el archivo PNG en modo lectura binaria
     FILE *fp = fopen("imagen.png", "rb");
+    long size;
+
     if (!fp) {
         perror("No se pudo abrir el archivo");
         return 1;
@@ -12,7 +14,7 @@ int main() {
     fseek(fp, 0, SEEK_END);
 
     // Usamos ftell para obtener la posición actual del cursor (tamaño total)
-    long size = ftell(fp);
+    size = ftell(fp);
 
     // Volvemos al inicio del archivo (podría usarse rewind o fseek)
     fseek(fp, 0, SEEK_SET);

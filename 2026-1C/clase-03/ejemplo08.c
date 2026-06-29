@@ -3,14 +3,15 @@
 
 int main(int argc, char *argv[]) {
     int verbose = (getenv("VERBOSE") != NULL);
+    int a, b;
 
     if (argc <3 ) {
         printf("Uso: %s <num 1> <num2 2> \n", argv[0]);
         return 1;
     }
 
-    int a = atoi(argv[1]);
-    int b = atoi(argv[2]);
+    a = atoi(argv[1]);
+    b = atoi(argv[2]);
 
     if (verbose) {
         printf("Argumentos recibidos: %d\n", argc);

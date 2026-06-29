@@ -1,23 +1,19 @@
 #include <stdio.h>
 #include <string.h>
 
-int esLetraONum(char c) {
-    return ((c >= 'A' && c <= 'Z') ||
-            (c >= 'a' && c <= 'z') ||
-            (c >= '0' && c <= '9'));
-}
+int esLetraONum(char);
 
 int main() {
     FILE *fp = fopen("logs_ups.txt", "r");
-    if (!fp) {
-        printf("No se pudo abrir el archivo.\n");
-        return 1;
-    }
-
     const char objetivo[] = "UPM";
     char buffer[100];
     int idx = 0;
     int c, contador = 0;
+
+    if (!fp) {
+        printf("No se pudo abrir el archivo.\n");
+        return 1;
+    }
 
     while ((c = fgetc(fp)) != EOF) {
         if (esLetraONum(c)) {
@@ -51,4 +47,10 @@ int main() {
     }
 
     return 0;
+}
+
+int esLetraONum(char c) {
+    return ((c >= 'A' && c <= 'Z') ||
+            (c >= 'a' && c <= 'z') ||
+            (c >= '0' && c <= '9'));
 }

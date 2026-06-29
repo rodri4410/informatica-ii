@@ -18,11 +18,13 @@ int main() {
 }
 
 int busquedaBinaria(int vec[], int izquierda, int derecha, int objetivo) {
+    int medio;
+
     if (izquierda > derecha) {
-        return -1; // Caso base: el objetivo no está en el arreglo
+        return -1; // Caso base: el objetivo no está en el vector
     }
 
-    int medio = (izquierda + derecha)  / 2;
+    medio = (izquierda + derecha)  / 2;
 
     if (vec[medio] == objetivo) {
         return medio; // Elemento encontrado

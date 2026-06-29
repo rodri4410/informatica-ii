@@ -25,8 +25,8 @@
 * **hanoi.c** — Torres de Hanoi: mover `n` discos de una torre a otra usando una auxiliar, sin poner nunca un disco grande sobre uno chico. El truco recursivo: mover `n-1` discos al auxiliar, mover el disco grande al destino, y mover los `n-1` del auxiliar al destino. Imposible de pensar con un `for`, casi trivial con recursión.
   Probar: compilar con `gcc -Wall hanoi.c -o hanoi` y ejecutar con `n = 4` (imprime la secuencia de movimientos). Contar los movimientos: son `2^n - 1` (para 4 discos, 15). Cambiar `n` a 3, 5, 6 y verificar que la cantidad de movimientos sigue `2^n - 1` — por eso el problema "explota" con pocos discos más.
 
-* **busquedabin.c** — Búsqueda binaria recursiva sobre un arreglo **ordenado**: mirar el elemento del medio; si es el buscado, listo; si el objetivo es menor, buscar recursivamente en la mitad izquierda; si es mayor, en la derecha. Tiene **dos casos base**: encontrarlo (`vec[medio] == objetivo`) o agotar el rango (`izquierda > derecha`).
-  Probar: compilar y ejecutar tal cual (busca el `8`, que **no** está → "no encontrado"). Cambiar `objetivo` por un valor que sí esté (ej. `7` → posición 3) y por los extremos (`1` y `13`). Agregar un `printf` adentro de la función para ver en qué `medio` mira en cada paso y comprobar que descarta la mitad del arreglo cada vez.
+* **busquedabin.c** — Búsqueda binaria recursiva sobre un vector **ordenado**: mirar el elemento del medio; si es el buscado, listo; si el objetivo es menor, buscar recursivamente en la mitad izquierda; si es mayor, en la derecha. Tiene **dos casos base**: encontrarlo (`vec[medio] == objetivo`) o agotar el rango (`izquierda > derecha`).
+  Probar: compilar y ejecutar tal cual (busca el `8`, que **no** está → "no encontrado"). Cambiar `objetivo` por un valor que sí esté (ej. `7` → posición 3) y por los extremos (`1` y `13`). Agregar un `printf` adentro de la función para ver en qué `medio` mira en cada paso y comprobar que descarta la mitad del vector cada vez.
 
 **Tema:** El orden importa — operar antes o después de la llamada
 

@@ -3,14 +3,14 @@
 int main()
 {
     int numeros[10];
-
-
     FILE *fp = fopen("datos.dat", "rb");
+    size_t leidos;
+
     if (fp == NULL) {
         perror("No se pudo abrir el archivo");
         return 1;  }
 
-    size_t leidos = fread (numeros, sizeof(int), 10, fp)  ;
+    leidos = fread (numeros, sizeof(int), 10, fp)  ;
 
 
     if (feof(fp)) {

@@ -14,13 +14,15 @@ void bubbleSort(Producto [], int );
 void mostrarArchivo (const char *);
 
 int main() {
+    Producto productos[MAX_PRODUCTOS];
+    FILE *fp;
+    long tam_bytes;
+    int total;
 
     // Mostrar archivo original
     mostrarArchivo(ARCHIVO_IN);
 
-    Producto productos[MAX_PRODUCTOS];
-
-    FILE *fp = fopen(ARCHIVO_IN, "rb");
+    fp = fopen(ARCHIVO_IN, "rb");
     if (!fp) {
         perror("Error al abrir el archivo");
         return 1;
@@ -28,8 +30,8 @@ int main() {
 
     // Determinar tamaño del archivo en bytes
     fseek(fp, 0, SEEK_END);
-    long tam_bytes = ftell(fp);
-    int total = tam_bytes / sizeof(Producto);
+    tam_bytes = ftell(fp);
+    total = tam_bytes / sizeof(Producto);
     fseek(fp, 0, SEEK_SET);
     // Verificar límite
     if (total > MAX_PRODUCTOS) {

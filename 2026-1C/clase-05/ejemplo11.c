@@ -2,12 +2,13 @@
 
 int main() {
     FILE *fp = fopen("archivo.txt", "r");
+    char c;
+
     if (!fp) {
         perror("No se pudo abrir");
         return 1;
     }
 
-    char c;
     while ((c = fgetc(fp)) != EOF) {
         putchar(c);
     }

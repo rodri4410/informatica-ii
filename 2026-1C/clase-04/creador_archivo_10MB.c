@@ -7,7 +7,9 @@
 #define TOTAL_BYTES (FILESIZE_MB * BYTES_PER_MB)
 
 int main() {
-    FILE *fp = fopen("archivo_grande.txt", "w"); 
+    FILE *fp = fopen("archivo_grande.txt", "w");
+    char c;
+
     if (fp == NULL) {
         perror("No se pudo crear el archivo");
         return 1;
@@ -17,7 +19,7 @@ int main() {
 
     for (int i = 0; i < TOTAL_BYTES; i++) {
         // Caracter aleatorio imprimible (entre 32 y 126 en ASCII)
-        char c = (char)(rand() % (126 - 32 + 1) + 32);
+        c = (char)(rand() % (126 - 32 + 1) + 32);
         putc(c, fp);
     }
 

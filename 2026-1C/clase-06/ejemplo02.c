@@ -27,12 +27,13 @@ int main() {
 
 void mostrarArchivo(const char *nombreArchivo) {
     FILE *f = fopen(nombreArchivo, "rb");
+    Producto p;
+
     if (!f) {
         perror("Error al abrir el archivo");
         return;
     }
 
-    Producto p;
     while (fread(&p, sizeof(Producto), 1, f) == 1) {
         printf("Codigo: %3d | Nombre: %-15s | Precio: $%7.2f\n", p.codigo, p.nombre, p.precio);
     }
@@ -42,14 +43,17 @@ void mostrarArchivo(const char *nombreArchivo) {
 
 void bubbleSortArchivo(const char *nombreArchivo) {
     FILE *f = fopen(nombreArchivo, "rb+");  // lectura y escritura en el mismo archivo
+    long tam_bytes;
+    int total;
+    Producto a, b;
+
     if (!f) {
         perror("Error al abrir el archivo para ordenamiento");
         return;
     }
     fseek(f, 0, SEEK_END);
-    long tam_bytes = ftell(f);
-    int total = tam_bytes / sizeof(Producto);
-    Producto a, b;
+    tam_bytes = ftell(f);
+    total = tam_bytes / sizeof(Producto);
     for (int i = 0; i < total - 1; i++) {
         for (int j = 0; j < total - 1 - i; j++) {
             // Leer producto en posición j

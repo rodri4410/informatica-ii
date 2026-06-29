@@ -4,12 +4,13 @@
 
 int main() {
     FILE *fp = fopen("texto.txt", "w+"); // Abrir para lectura y escritura
+    char c = 0;
+
     if (!fp) {
         perror("No se pudo abrir el archivo");
         return 1;
     }
 
-    char c = 0;
     printf("Escribi caracteres (usa ! para borrar el ultimo, # para salir):\n");
 
     while (c != '#') {

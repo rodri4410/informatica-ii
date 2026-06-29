@@ -2,12 +2,13 @@
 
 int main() {
     FILE *out = fopen("temperaturas.txt", "a");
+    float temp;
+
     if (out == NULL) {
         perror("No se pudo abrir el archivo de temperaturas");
         return 1;
     }
 
-    float temp;
     printf("Ingrese temperatura medida: ");
     if (scanf("%f", &temp) != 1) {
         fprintf(stderr, "Entrada inválida.\n");
