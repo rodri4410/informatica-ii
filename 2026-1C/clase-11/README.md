@@ -1,6 +1,6 @@
 # Clase 11
 
-**Tema:** Máquinas de estado (FSM). Modelar un sistema con **estados** finitos, **transiciones** y **acciones**, e implementarlo en C. Dos formas: con `switch`-`case` + `enum`, y con **punteros a función** (un estado = una función). De un reconocedor simple a una **FSM extendida (EFSM)** que agrega variables cuando la máquina sola no alcanza.
+**Tema:** Máquinas de estado (FSM). Modelar un sistema con **estados** finitos, **transiciones** y **acciones**, e implementarlo en C con `switch`-`case` + `enum` (un estado por `case`) o con **punteros a función** (un estado = una función). De un reconocedor simple a una **FSM extendida (EFSM)** que agrega variables cuando la máquina sola no alcanza.
 
 ## Ejemplos
 
@@ -11,33 +11,50 @@
   Probar: `gcc -Wall ejemplo2.c -o ejemplo2 && echo "abcd" | ./ejemplo2` → la detecta.
   ⚠️ **Tiene la TAREA de abajo.**
 
-* **ejemplo2_punteros.c** — El **mismo** detector "abcd" pero con **punteros a función**. Versión **correcta**.
-  Probar: `gcc -Wall ejemplo2_punteros.c -o ejemplo2_punteros && echo "ababcd" | ./ejemplo2_punteros` → la detecta.
-
-* **ejemplo3.c** — El detector "abcd" **extendido** con un contador (**EFSM**): cuenta cuántas veces aparece.
-  La máquina (4 estados) no cambia; se agrega **una variable**. Probar: `echo "abcdxabcd" | ./ejemplo3` → 2 detecciones.
-
 * **ejemplo4.c** — Tratamiento de un **protocolo** de comunicaciones `| STX | CANT | DATOS | CHK | ETX |` con checksum XOR (**EFSM**). Probar: `gcc -Wall ejemplo4.c -o ejemplo4 && ./ejemplo4`.
+  Tiene un **visualizador interactivo** (ver más abajo).
 
-* **formato_FSM.c** / **formato_FSM_ptr.c** — **Plantillas** (moldes) de FSM: con `switch`+`enum` y con punteros a función. Son esqueletos para completar (definís vos los estados y la condición de salida).
+* **ejemplo5.c** — Detector de secuencia **con punteros a función** (**Mealy**): un estado = una función; el estado actual es un **puntero a función** (`nextState`) y transicionar = asignarle otra función. Escala mejor que `switch`-`case` cuando la máquina crece.
+  Probar: `gcc -Wall ejemplo5.c -o ejemplo5 && echo "abcd" | ./ejemplo5`
+
+* **formato_FSM.c** — **Plantilla** (molde) de FSM con `switch`+`enum`. Es un esqueleto para completar (definís vos los estados y la condición de salida).
+
+* **formato_FSM_ptr.c** — **Plantilla** (molde) de FSM con **punteros a función** (la estructura de `ejemplo5.c`, vaciada). Esqueleto para completar: definís vos las funciones `state_0()…state_n()` y la condición de salida (por eso el molde solo compila pero no linkea).
 
 * **enum1.c** / **enum2.c** — Demos de `enum` (prerequisito): constantes simbólicas y sus valores enteros.
 
 > Los programas leen del teclado y terminan con **EOF**: `Ctrl+D` (Linux) / `Ctrl+Z`+Enter (Windows), o pipeando la entrada (`echo "abcd" | ./prog`).
->
-> El **Ejemplo 5** (anti-rebote de un pulsador — *timed FSM*) se ve en las slides; no tiene código en el repo.
+
+## Visualizador interactivo
+
+Diagrama de la máquina de estados del protocolo (`ejemplo4.c`) **paso a paso**, con el código al lado.
+
+* **En vivo:** https://sfweber.github.io/informatica-ii/2026-1C/clase-11/visualizador-protocolo/
+* **Offline:** abrir `visualizador-protocolo/index.html` (doble clic; no necesita internet).
 
 ## TAREA
+
+### Tarea 1 — corregir el detector "abcd"
 
 `ejemplo2.c` detecta `"abcd"`, pero **falla** cuando la secuencia aparece **después de un comienzo parcial**. Por ejemplo, con la entrada **`ababcd`** la secuencia `abcd` está adentro (posiciones 3 a 6), pero el programa **no la detecta**:
 
 ```
-echo "ababcd" | ./ejemplo2      # no detecta (mal)
-echo "ababcd" | ./ejemplo2_punteros   # sí detecta (así debería)
+echo "abcd"   | ./ejemplo2      # sí la detecta
+echo "ababcd" | ./ejemplo2      # NO la detecta (mal) ← esto hay que corregir
 ```
 
 **Corregí la máquina de estados de `ejemplo2.c` (con `switch`-`case`) para que la detecte igual.**
 
 * Pista: pensá qué debería pasar con una **`a`** cuando ya venías avanzando en la secuencia (estás en un estado intermedio y llega otra `a`). ¿A qué estado conviene ir?
-* Podés comparar el comportamiento con `ejemplo2_punteros.c`, que ya lo resuelve.
 * Entregá `ejemplo2.c` corregido, manteniendo la estructura con `switch`-`case`.
+
+### Tarea 2 — contar las apariciones (EFSM)
+
+Partiendo de **tu** detector ya corregido (Tarea 1), extendelo para que **cuente cuántas veces aparece `abcd`** en la entrada. A la **tercera** aparición debe imprimir `ALARMA ACTIVA` y **reiniciar el conteo** (vuelve a cero y sigue contando).
+
+Los cuatro estados **no cambian**: alcanza con agregar **una variable** (un contador). Una FSM + una variable de datos = **EFSM** (*extended FSM*).
+
+* La acción `contador++` va en la **transición que completa `abcd`** (la que dispara la detección), no dentro de un estado.
+* Pensá dónde declarás e inicializás el contador, y cómo lo reiniciás al llegar a 3.
+* Probar (ejemplo): `echo "abcdabcdabcd" | ./tu_programa` → en la 3ª aparición imprime `ALARMA ACTIVA`.
+* No hay solución en el repo **a propósito**: depende de cómo hayas armado tu máquina en la Tarea 1. Entregá tu `.c`.

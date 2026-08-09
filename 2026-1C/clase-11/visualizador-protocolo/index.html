@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ejemplo 4 — Máquina de estados del protocolo (Info II)</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --panel:#ffffff; --ink:#1c2733; --muted:#5b6b7b;
+    --accent:#d7263d; --accent2:#1b6ca8; --ok:#2e7d32; --line:#cdd6df;
+    --code-bg:#1e242b; --code-ink:#e6edf3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.4;overflow-x:hidden;
+       padding-bottom:132px}          /* deja aire para la barra fija inferior */
+  header{background:var(--ink);color:#fff;padding:12px 22px}
+  header h1{margin:0;font-size:17px}
+  header p{margin:3px 0 0;color:#aebccb;font-size:12.5px}
+  .wrap{max-width:none;margin:0;padding:14px 30px 20px}
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:start}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+         padding:12px 14px;margin-bottom:14px}
+  .panel h2{margin:0 0 9px;font-size:14px;letter-spacing:.3px;
+            border-bottom:2px solid var(--line);padding-bottom:5px}
+  /* diagrama a ancho completo de pantalla */
+  .fullbleed{width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;
+             border-radius:0;border-left:0;border-right:0;padding:8px 30px 12px}
+  .fullbleed svg{width:100%;height:auto;display:block}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  button{font:inherit;font-weight:600;border:0;border-radius:7px;padding:6px 11px;
+         cursor:pointer;background:var(--accent2);color:#fff;font-size:13.5px}
+  button.alt{background:#e9eef3;color:var(--ink);border:1px solid var(--line)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  input[type=text]{font:inherit;padding:7px 9px;border:1px solid var(--line);
+                   border-radius:7px;width:100%;font-family:ui-monospace,Consolas,monospace}
+  /* barra de controles FIJA al pie: siempre a mano desde el STD y desde el código */
+  .cmdbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--panel);
+          border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.14);
+          padding:8px 30px}
+  /* popover para cargar trama propia: flota SOBRE la barra, no le agrega alto */
+  .loadpop{position:absolute;bottom:100%;left:30px;right:30px;margin-bottom:6px;
+           background:var(--panel);border:1px solid var(--line);border-radius:10px;
+           box-shadow:0 -4px 16px rgba(0,0,0,.18);padding:10px 12px;
+           display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .loadpop[hidden]{display:none}
+  .loadpop input[type=text]{flex:1;min-width:240px;width:auto}
+  .cmdbar .inner{max-width:none;margin:0}
+  .cmdbar .tape{flex-wrap:nowrap;overflow-x:auto;margin-top:7px;padding-bottom:2px}
+  .tape{display:flex;flex-wrap:wrap;gap:5px}
+  .byte{min-width:36px;text-align:center;padding:5px 3px;border-radius:6px;flex:0 0 auto;
+        border:1px solid var(--line);background:#fbfcfd;font-family:ui-monospace,Consolas,monospace;
+        font-size:12.5px}
+  .byte small{display:block;color:var(--muted);font-size:9.5px}
+  .byte.stx{border-color:var(--ok);color:var(--ok)}
+  .byte.etx{border-color:var(--accent);color:var(--accent)}
+  .byte.cur{outline:3px solid var(--accent2);outline-offset:1px;background:#eaf3fb}
+  .byte.done{opacity:.45}
+  .vars{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+  .vars div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:3px 0}
+  .vars b{color:var(--accent2)}
+  pre.code{background:var(--code-bg);color:var(--code-ink);border-radius:8px;
+           padding:11px 13px;overflow:auto;font-family:ui-monospace,Consolas,monospace;
+           font-size:12px;line-height:1.5;margin:0}
+  .cs{display:block;border-left:3px solid transparent;padding-left:8px;margin-left:-8px;transition:background .15s}
+  .cs.active{background:#33404d;border-left-color:var(--accent)}
+  .cmt{color:#7f8c99}.kw{color:#c792ea}.fn{color:#82aaff}
+  .log{font-family:ui-monospace,Consolas,monospace;font-size:12px;max-height:180px;overflow:auto;
+       border:1px solid var(--line);border-radius:7px;padding:8px;background:#fbfcfd}
+  .log div{padding:2px 0;border-bottom:1px dotted #e4e9ee}
+  .log .t{color:var(--muted)} .log .ok{color:var(--ok);font-weight:700}
+  .packet{margin-top:8px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;
+          background:#eafaef;border:1px solid #b6e3c2;border-radius:7px;padding:8px;color:var(--ok);min-height:20px}
+  /* nodos del diagrama */
+  .stnode rect{fill:#eef2f6;stroke:#9fb0c0;stroke-width:2.5}
+  .stnode text{font-family:ui-monospace,Consolas,monospace;font-weight:700;font-size:18px;fill:var(--ink)}
+  .stnode.active rect{fill:#d7263d;stroke:#9c0e22}
+  .stnode.active text{fill:#fff}
+  .initnode circle{fill:var(--ink);stroke:none}
+  .edge{fill:none;stroke:#7b8a99;stroke-width:2.5}
+  .elabel{font-size:13px;fill:#34506b;font-family:ui-monospace,Consolas,monospace}
+  /* formato evento [guarda] / acción — mismos colores que las slides de clase */
+  .elabel .ev{fill:var(--accent2);font-weight:700}
+  .elabel .gd{fill:var(--ok);font-weight:700}
+  .elabel .ac{fill:var(--accent);font-weight:700}
+  .hint{color:var(--muted);font-size:12px;margin:6px 0 0}
+  .kbd{font-size:11.5px;color:var(--muted)}
+  .kbd b{color:var(--ink);background:#eef2f6;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-family:ui-monospace,Consolas,monospace}
+  code{background:#eef2f6;padding:1px 5px;border-radius:4px;font-family:ui-monospace,Consolas,monospace}
+</style>
+</head>
+<body>
+<header>
+  <h1>Ejemplo 4 — Máquina de estados del protocolo</h1>
+  <p>Info II · Prof. Weber · Simulación <b>fiel a <code>ejemplo4.c</code></b> · Protocolo
+     <code>| STX | CANT_DATOS | DATOS | CHK | ETX |</code> · funciona offline (un solo archivo)</p>
+</header>
+
+<!-- DIAGRAMA a ancho completo -->
+<div class="panel fullbleed">
+  <h2 style="margin:0 0 6px">Diagrama de estados (STD) — el estado activo procesa el próximo byte</h2>
+  <svg viewBox="-70 0 1830 322" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <marker id="ah" markerWidth="9" markerHeight="9" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L8,3 L0,6 Z" fill="#7b8a99"/>
+      </marker>
+    </defs>
+    <!-- TRANSICIÓN INICIAL (UML): la máquina arranca en EST_STX -->
+    <!-- en el código: ejemplo4.c:63 → Estados siguienteEstado = EST_STX; -->
+    <g class="initnode">
+      <circle cx="-40" cy="96" r="10"/>
+      <path class="edge" d="M-30,96 L20,96" marker-end="url(#ah)"/>
+    </g>
+    <!-- FORWARD: rectos, en el centro de las cajas (y=96). etiqueta encima -->
+    <path class="edge" d="M220,96 L400,96" marker-end="url(#ah)"/>
+    <text class="elabel" x="310" y="75" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[byte==STX]</tspan></text>
+    <text class="elabel" x="310" y="90" text-anchor="middle">/ <tspan class="ac">chk=0</tspan></text>
+    <path class="edge" d="M600,96 L780,96" marker-end="url(#ah)"/>
+    <text class="elabel" x="690" y="75" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[byte&gt;0]</tspan></text>
+    <text class="elabel" x="690" y="90" text-anchor="middle">/ <tspan class="ac">cant=byte</tspan></text>
+    <path class="edge" d="M980,96 L1160,96" marker-end="url(#ah)"/>
+    <text class="elabel" x="1070" y="56" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[cant==1]</tspan> /</text>
+    <text class="elabel" x="1070" y="75" text-anchor="middle"><tspan class="ac">guardar byte,</tspan></text>
+    <text class="elabel" x="1070" y="90" text-anchor="middle"><tspan class="ac">chk^=byte, cant--</tspan></text>
+    <path class="edge" d="M1360,96 L1540,96" marker-end="url(#ah)"/>
+    <text class="elabel" x="1450" y="88" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[byte==chk]</tspan></text>
+    <!-- ARRIBA: self STX (rectangular) y skip CANT-&gt;CHK (carril alto). etiqueta SOBRE -->
+    <path class="edge" d="M80,68 L80,44 L160,44 L160,68" marker-end="url(#ah)"/>
+    <text class="elabel" x="120" y="38" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[byte≠STX]</tspan></text>
+    <path class="edge" d="M530,68 L530,24 L1230,24 L1230,68" marker-end="url(#ah)"/>
+    <text class="elabel" x="880" y="17" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[byte==0]</tspan></text>
+    <!-- DATOS self-loop ABAJO (rectangular). etiqueta DEBAJO -->
+    <path class="edge" d="M845,124 L845,152 L915,152 L915,124" marker-end="url(#ah)"/>
+    <text class="elabel" x="880" y="168" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[cant&gt;1]</tspan> /</text>
+    <text class="elabel" x="880" y="182" text-anchor="middle"><tspan class="ac">guardar byte, chk^=byte, cant--</tspan></text>
+    <!-- RETORNOS anidados (sin cruces). etiqueta DEBAJO del carril -->
+    <!-- CHK -> STX (checksum mal): carril mas alto, entra a STX mas a la DERECHA -->
+    <path class="edge" d="M1260,124 L1260,210 L200,210 L200,124" marker-end="url(#ah)"/>
+    <text class="elabel" x="730" y="226" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[byte≠chk]</tspan> / <tspan class="ac">descartar</tspan></text>
+    <!-- ETX -> STX  (DOS transiciones explícitas y separadas), anidadas por debajo de CHK -->
+    <!-- (a) byte == ETX : paquete válido -->
+    <path class="edge" d="M1620,124 L1620,252 L170,252 L170,124" marker-end="url(#ah)"/>
+    <text class="elabel" x="895" y="268" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[byte==ETX]</tspan> / <tspan class="ac">mostrarPaquete()</tspan></text>
+    <!-- (b) byte ≠ ETX : se descarta (carril mas bajo, entra a STX mas a la IZQUIERDA) -->
+    <path class="edge" d="M1690,124 L1690,294 L140,294 L140,124" marker-end="url(#ah)"/>
+    <text class="elabel" x="915" y="310" text-anchor="middle"><tspan class="ev">byte_recv</tspan> <tspan class="gd">[byte≠ETX]</tspan> / <tspan class="ac">descartar</tspan></text>
+    <!-- Leyenda de notación (como en las slides) -->
+    <text class="elabel" x="1750" y="316" text-anchor="end">Formato: <tspan class="ev">evento</tspan> <tspan class="gd">[guarda]</tspan> / <tspan class="ac">acción</tspan></text>
+    <!-- NODOS (cajas mas bajas) -->
+    <g class="stnode" data-state="STX"><rect x="20" y="68" width="200" height="56" rx="11"/><text x="120" y="102" text-anchor="middle">EST_STX</text></g>
+    <g class="stnode" data-state="CANT"><rect x="400" y="68" width="200" height="56" rx="11"/><text x="500" y="102" text-anchor="middle">EST_CANT</text></g>
+    <g class="stnode" data-state="DATOS"><rect x="780" y="68" width="200" height="56" rx="11"/><text x="880" y="102" text-anchor="middle">EST_DATOS</text></g>
+    <g class="stnode" data-state="CHK"><rect x="1160" y="68" width="200" height="56" rx="11"/><text x="1260" y="102" text-anchor="middle">EST_CHK</text></g>
+    <g class="stnode" data-state="ETX"><rect x="1540" y="68" width="200" height="56" rx="11"/><text x="1640" y="102" text-anchor="middle">EST_ETX</text></g>
+  </svg>
+</div>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- código sincronizado (columna A) -->
+    <div class="panel">
+      <h2>Código <code>recibir()</code> — el <code>case</code> activo se resalta</h2>
+<pre class="code"><span class="kw">switch</span> (siguienteEstado) {
+<span class="cs" data-state="STX">  <span class="kw">case</span> EST_STX:
+    <span class="kw">if</span> (datos[i] == STX) {        <span class="cmt">// 0x02</span>
+      indBuffer = 0; cantBuffer = 0; chkBuffer = 0;
+      siguienteEstado = EST_CANT;
+    }                                <span class="cmt">// si no es STX, sigue en EST_STX</span>
+    <span class="kw">break</span>;</span>
+<span class="cs" data-state="CANT">  <span class="kw">case</span> EST_CANT:
+    cantBuffer = datos[i];
+    <span class="kw">if</span> (cantBuffer == 0)         siguienteEstado = EST_CHK;
+    <span class="kw">else</span>                         siguienteEstado = EST_DATOS;
+    <span class="kw">break</span>;</span>
+<span class="cs" data-state="DATOS">  <span class="kw">case</span> EST_DATOS:
+    buffer[indBuffer] = datos[i]; indBuffer++;
+    chkBuffer ^= datos[i]; cantBuffer--;
+    <span class="kw">if</span> (cantBuffer == 0) siguienteEstado = EST_CHK;
+    <span class="kw">break</span>;</span>
+<span class="cs" data-state="CHK">  <span class="kw">case</span> EST_CHK:
+    <span class="kw">if</span> (datos[i] == chkBuffer) siguienteEstado = EST_ETX;
+    <span class="kw">else</span>                      siguienteEstado = EST_STX;
+    <span class="kw">break</span>;</span>
+<span class="cs" data-state="ETX">  <span class="kw">case</span> EST_ETX:
+    <span class="kw">if</span> (datos[i] == ETX) <span class="fn">mostrarPaquete</span>(buffer, indBuffer);
+    siguienteEstado = EST_STX;
+    <span class="kw">break</span>;</span>
+}</pre>
+    </div>
+    <!-- estado en vivo + bitácora (columna B) -->
+    <div class="panel">
+      <h2>Estado en vivo</h2>
+      <div class="vars">
+        <div><span>estado actual</span><b id="vEstado">EST_STX</b></div>
+        <div><span>byte (datos[i])</span><b id="vByte">—</b></div>
+        <div><span>indBuffer</span><b id="vInd">0</b></div>
+        <div><span>cantBuffer</span><b id="vCant">0</b></div>
+        <div><span>chkBuffer</span><b id="vChk">0</b></div>
+        <div><span>buffer</span><b id="vBuf">[ ]</b></div>
+      </div>
+      <div class="packet" id="packet">— sin paquete todavía —</div>
+      <h2 style="margin-top:14px">Bitácora</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BARRA DE CONTROLES FIJA -->
+<div class="cmdbar">
+  <div id="loadPop" class="loadpop" hidden>
+    <span class="hint" style="margin:0">Bytes (decimal, separados por espacio o coma). STX=2, ETX=3.</span>
+    <input id="input" type="text" value="2 8 11 22 33 44 55 66 77 88 112 3">
+    <button id="bApply">Cargar ⏎</button>
+  </div>
+  <div class="inner">
+    <div class="controls">
+      <button id="bStep">Paso ▶</button>
+      <button id="bRun" class="alt">Correr todo ⏩</button>
+      <button id="bReset" class="alt">Reset ↺</button>
+      <button id="bExample" class="alt">Cargar ejemplo del código</button>
+      <button id="bLoad" class="alt">Cargar trama… ✎</button>
+      <span id="status" class="hint" style="margin:0"></span>
+      <span class="kbd" style="margin-left:auto"><b>Espacio</b> paso · <b>Enter</b> correr · <b>R</b> reset</span>
+    </div>
+    <div id="tape" class="tape"></div>
+  </div>
+</div>
+
+<script>
+const STX=2, ETX=3, MAX_BUFFER=512;
+let bytes=[], idx=0, estado='STX', ind=0, cant=0, chk=0, buffer=[], packetTxt='';
+
+const $=id=>document.getElementById(id);
+function parseBytes(s){ return s.split(/[\s,]+/).filter(x=>x.length).map(Number).filter(n=>!isNaN(n)); }
+function reset(){
+  bytes=parseBytes($('input').value);
+  idx=0; estado='STX'; ind=0; cant=0; chk=0; buffer=[]; packetTxt='';
+  $('log').innerHTML=''; render();
+}
+function stepCore(b){
+  // RÉPLICA EXACTA de recibir() de ejemplo4.c
+  let note='', cls='';
+  switch(estado){
+    case 'STX':
+      if(b===STX){ ind=0;cant=0;chk=0; estado='CANT'; note='llegó STX → arranca un paquete'; }
+      else { note='no es STX → sigue esperando inicio'; }
+      break;
+    case 'CANT':
+      cant=b;
+      if(cant===0){ estado='CHK'; note='cantidad 0 → no hay datos, va al checksum'; }
+      else { estado='DATOS'; note='espera '+cant+' datos'; }
+      break;
+    case 'DATOS':
+      buffer[ind]=b; ind++; chk^=b; cant--;
+      if(cant===0){ estado='CHK'; note='último dato. chk acumulado = '+chk; }
+      else { note='guardó dato; faltan '+cant+'. chk parcial = '+chk; }
+      break;
+    case 'CHK':
+      if(b===chk){ estado='ETX'; note='checksum OK ('+b+' == '+chk+')'; }
+      else { estado='STX'; note='checksum MAL ('+b+' ≠ '+chk+') → descarta'; }
+      break;
+    case 'ETX':
+      if(b===ETX){ packetTxt='[ '+buffer.slice(0,ind).join(', ')+' ]'; note='llegó ETX → PAQUETE OK '+packetTxt; cls='ok'; }
+      else { note='no es ETX → descarta'; }
+      estado='STX';
+      break;
+  }
+  return {note,cls};
+}
+function step(){
+  if(idx>=bytes.length) return;
+  const b=bytes[idx]; const caseState=estado;
+  const r=stepCore(b);
+  const row=document.createElement('div');
+  row.innerHTML='<span class="t">#'+idx+' byte='+b+'  ['+caseState+']</span> → <span class="'+r.cls+'">'+r.note+'</span>';
+  $('log').appendChild(row); $('log').scrollTop=$('log').scrollHeight;
+  idx++; render();
+}
+function run(){ let g=0; while(idx<bytes.length && g++<10000) step(); }
+function render(){
+  document.querySelectorAll('.stnode').forEach(n=>n.classList.toggle('active', n.dataset.state===estado));
+  document.querySelectorAll('.cs').forEach(n=>n.classList.toggle('active', n.dataset.state===estado));
+  $('vEstado').textContent='EST_'+estado;
+  $('vByte').textContent = idx<bytes.length ? bytes[idx] : '—';
+  $('vInd').textContent=ind; $('vCant').textContent=cant; $('vChk').textContent=chk;
+  $('vBuf').textContent='[ '+buffer.slice(0,ind).join(', ')+' ]';
+  $('packet').textContent = packetTxt ? ('PAQUETE recibido: '+packetTxt) : '— sin paquete todavía —';
+  const tape=$('tape'); tape.innerHTML=''; let curEl=null;
+  bytes.forEach((b,i)=>{
+    const d=document.createElement('div'); d.className='byte';
+    if(b===STX) d.classList.add('stx'); if(b===ETX) d.classList.add('etx');
+    if(i===idx){ d.classList.add('cur'); curEl=d; } if(i<idx) d.classList.add('done');
+    let tag = b===STX?'STX' : b===ETX?'ETX' : '';
+    d.innerHTML=b+'<small>'+(tag||'&nbsp;')+'</small>';
+    tape.appendChild(d);
+  });
+  if(curEl) curEl.scrollIntoView({inline:'center', block:'nearest'});
+  const fin = idx>=bytes.length;
+  $('bStep').disabled=fin; $('bRun').disabled=fin;
+  $('status').textContent = fin ? 'fin de la entrada' : ('por procesar: '+(bytes.length-idx)+' byte(s)');
+}
+$('bStep').onclick=step;
+$('bRun').onclick=run;
+$('bReset').onclick=reset;
+$('bExample').onclick=()=>{ $('input').value='2 8 11 22 33 44 55 66 77 88 112 3'; reset(); hidePop(); };
+function hidePop(){ $('loadPop').hidden=true; }
+$('bLoad').onclick=()=>{
+  const pop=$('loadPop');
+  pop.hidden=!pop.hidden;
+  if(!pop.hidden){ $('input').focus(); $('input').select(); }
+};
+$('bApply').onclick=()=>{ reset(); hidePop(); };
+$('input').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ e.preventDefault(); reset(); hidePop(); }
+  else if(e.key==='Escape'){ hidePop(); }
+});
+$('input').addEventListener('change', reset);
+// atajos de teclado: Espacio/→ = Paso, Enter = Correr, R = Reset
+document.addEventListener('keydown', e=>{
+  if(e.target.tagName==='INPUT') return;
+  if(e.code==='Space' || e.key==='ArrowRight'){ e.preventDefault(); step(); }
+  else if(e.key==='Enter'){ e.preventDefault(); run(); }
+  else if(e.key==='r' || e.key==='R'){ reset(); }
+});
+reset();
+</script>
+</body>
+</html>

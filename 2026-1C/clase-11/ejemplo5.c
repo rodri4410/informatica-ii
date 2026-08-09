@@ -1,5 +1,4 @@
-/* Ejemplo 2 (versión con PUNTEROS A FUNCIÓN) — detector "abcd", correcto.
- * Maneja bien el reinicio ante 'a' (a diferencia de la versión con switch). TIPO: Mealy. */
+/* TIPO: Mealy -- detector "abcd" con punteros a función (un estado = una función) */
 #include <stdio.h>
 
 
